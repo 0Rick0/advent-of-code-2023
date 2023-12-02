@@ -6,8 +6,21 @@ const GameSettings = struct {
     maxBlue: u32,
 };
 
-fn processShow(game: u32, show: []const u8, gs: GameSettings) !bool {
+const DiceCount = struct {
+    red: u32 = 0,
+    green: u32 = 0,
+    blue: u32 = 0,
+
+    fn maxWith(self: *DiceCount, other: *DiceCount) void {
+        self.red = @max(self.red, other.red);
+        self.green = @max(self.green, other.green);
+        self.blue = @max(self.blue, other.blue);
+    }
+};
+
+fn processShow(show: []const u8) !DiceCount {
     var dices = std.mem.split(u8, show, ",");
+    var counts = DiceCount{};
     while (dices.next()) |dice| {
         var diceTrimmed = std.mem.trim(u8, dice, " ");
         var diceIt = std.mem.split(u8, diceTrimmed, " ");
@@ -16,28 +29,20 @@ fn processShow(game: u32, show: []const u8, gs: GameSettings) !bool {
         var numInt = try std.fmt.parseInt(u32, num, 10);
         // std.debug.print("{s} {s}=={d}\n", .{ color, num, numInt });
         if (std.mem.eql(u8, color, "red")) {
-            if (numInt > gs.maxRed) {
-                std.debug.print("Game {d} is not valid as red is show {d} times\n", .{ game, numInt });
-                return false;
-            }
+            counts.red = numInt;
         } else if (std.mem.eql(u8, color, "green")) {
-            if (numInt > gs.maxGreen) {
-                std.debug.print("Game {d} is not valid as green is show {d} times\n", .{ game, numInt });
-                return false;
-            }
+            counts.green = numInt;
         } else if (std.mem.eql(u8, color, "blue")) {
-            if (numInt > gs.maxBlue) {
-                std.debug.print("Game {d} is not valid as blue is show {d} times\n", .{ game, numInt });
-                return false;
-            }
+            counts.blue = numInt;
         } else {
             std.debug.print("Unknown color {s}\n", .{color});
         }
     }
-    return true;
+    return counts;
 }
 
 fn processLine(line: []u8, gs: GameSettings) !u32 {
+    _ = gs;
     var it = std.mem.split(u8, line, ":");
     var game = it.first();
     var dices = it.rest();
@@ -49,14 +54,12 @@ fn processLine(line: []u8, gs: GameSettings) !u32 {
     std.debug.print("Processing line {d}\n", .{gameno});
 
     var shows = std.mem.split(u8, dices, ";");
+    var maxDices = DiceCount{};
     while (shows.next()) |show| {
-        var result = try processShow(gameno, show, gs);
-        std.debug.print("Game {d} is valid: {}\n", .{ gameno, result });
-        if (!result) {
-            return 0;
-        }
+        var result = try processShow(show);
+        maxDices.maxWith(&result);
     }
-    return gameno;
+    return maxDices.red * maxDices.green * maxDices.blue;
 }
 
 pub fn main() !void {
@@ -73,9 +76,9 @@ pub fn main() !void {
     var in_stream = buf_reader.reader();
 
     var buf: [1024]u8 = undefined;
-    var numInvalid: u32 = 0;
+    var sumOfPower: u32 = 0;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        numInvalid += try processLine(line, gs);
+        sumOfPower += try processLine(line, gs);
     }
-    std.debug.print("Sum of valid: {d}\n", .{numInvalid});
+    std.debug.print("Sum of power: {d}\n", .{sumOfPower});
 }
