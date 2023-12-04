@@ -23,3 +23,9 @@ Was stuck for a bit on a simple bit of logic. (Was checking for symbols a bit to
 
 Implemented parsing logic in a package and solved the questions in the main class.
 The parsing logic was already sufficient after the first challenge that no logic needed to change for the second challenge.
+
+## Day 4 - Scratchcards
+Implemented in Scala
+
+This was a language I wanted to have a proper look at for quite a while.
+I do like the match statement and the power it gives you. Especially in assignment/returning.
