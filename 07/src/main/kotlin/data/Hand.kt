@@ -117,7 +117,7 @@ data class Hand(val cards: String, val bed: Long, val original: Hand? = null) : 
         val toList = this.cards.chars()
             .mapToObj {
                 if (it == 'J'.code) {
-                    return@mapToObj STRENGTH.chars().toList()
+                    return@mapToObj this.cards.chars().distinct().toList()
                 } else {
                     return@mapToObj listOf(it)
                 }
